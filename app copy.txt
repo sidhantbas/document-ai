@@ -1,0 +1,57 @@
+# app.py - The Face with a Brain
+# ================================
+
+import streamlit as st
+from PIL import Image
+import pytesseract
+
+st.set_page_config(page_title="Document AI", page_icon="📄", layout="wide")
+
+st.title("Document AI System")
+st.caption("Upload. Extract. Verify.")
+st.divider()
+
+# Two columns
+left_col, right_col = st.columns(2)
+
+with left_col:
+    st.subheader("Upload")
+    uploaded_file = st.file_uploader("Drop document", type=["png", "jpg", "jpeg"])
+
+with right_col:
+    st.subheader("Preview")
+    if uploaded_file:
+        image = Image.open(uploaded_file)
+        st.image(image, use_container_width=True)
+    else:
+        st.info("No document yet")
+
+st.divider()
+
+# Process
+if uploaded_file:
+    if st.button("Extract Text with AI", type="primary", use_container_width=True):
+        
+        with st.spinner("AI is reading the document..."):
+            image = Image.open(uploaded_file)
+            
+            # Real OCR extraction
+            extracted_text = pytesseract.image_to_string(image, lang='eng')
+        
+        st.success("Extraction complete!")
+        
+        # Show results
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.subheader("Raw Extracted Text")
+            st.text_area("OCR Output", extracted_text, height=400)
+        
+        with col2:
+            st.subheader("Statistics")
+            words = extracted_text.split()
+            lines = extracted_text.split('\n')
+            
+            st.metric("Words Found", len(words))
+            st.metric("Lines Found", len([l for l in lines if l.strip()]))
+            st.metric("Characters", len(extracted_text))

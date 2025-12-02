@@ -1,0 +1,18 @@
+{
+  "name": "insurance_form",
+  "fields": [
+    {"name": "Full Name (NP)", "labels": ["नाम", "थर", "पुरा नाम"], "type": "text"},
+    {"name": "Full Name (EN)", "labels": ["NAME IN ENGLISH", "NAME", "BLOCK LETTER"], "type": "text"},
+    {"name": "District", "labels": ["जिल्ला", "District"], "type": "text"},
+    {"name": "Municipality", "labels": ["न.पा.", "नगरपालिका", "Municipality"], "type": "text"},
+    {"name": "Ward", "labels": ["वडा", "Ward"], "type": "text"},
+    {"name": "Phone", "labels": ["फोन", "Phone", "Tel"], "type": "phone"},
+    {"name": "Mobile", "labels": ["मोबाइल", "Mobile"], "type": "phone"},
+    {"name": "Email", "labels": ["इमेल", "Email", "E-mail"], "type": "email"},
+    {"name": "PAN", "labels": ["PAN", "स्थायी लेखा"], "type": "pan"},
+    {"name": "Date of Birth", "labels": ["जन्म मिति", "Date of Birth", "DOB"], "type": "date"},
+    {"name": "Occupation", "labels": ["पेशा", "Occupation"], "type": "text"},
+    {"name": "Monthly Income", "labels": ["मासिक आय", "Monthly Income"], "type": "currency"},
+    {"name": "Sum Assured", "labels": ["बीमाङ्क", "Sum Assured"], "type": "currency"}
+  ]
+}

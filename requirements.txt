@@ -1,0 +1,9 @@
+streamlit
+easyocr
+pymupdf
+pillow
+numpy
+rapidfuzz
+python-Levenshtein
+openpyxl
+pandas
