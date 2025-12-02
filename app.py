@@ -1,5 +1,3 @@
-# app.py - Production Document AI
-
 import streamlit as st
 from PIL import Image
 import fitz
@@ -33,7 +31,7 @@ def ocr_image(reader, image):
     results = reader.readtext(np.array(image))
     return [{"text": t, "confidence": c, "bbox": b} for b, t, c in results]
 
-st.set_page_config(page_title="Document AI Pro", page_icon="🧠", layout="wide")
+st.set_page_config(page_title="Document AI", page_icon="📄", layout="wide")
 
 if "extractions" not in st.session_state:
     st.session_state.extractions = {}
@@ -41,62 +39,37 @@ if "extractions" not in st.session_state:
 tm = TemplateManager()
 
 with st.sidebar:
-    st.header("Document AI Pro")
-    st.caption("Dynamic | Accurate | Free")
-    
-    st.divider()
-    
-    st.subheader("Templates")
+    st.header("Document AI")
     templates = tm.list_templates()
     for t in templates:
-        st.caption(f"• {t}")
+        st.caption(t)
     
-    with st.expander("+ New Template"):
+    with st.expander("New Template"):
         name = st.text_input("Name", key="tpl_name")
-        fields = st.text_area("Fields JSON", key="tpl_fields", height=150)
+        fields = st.text_area("Fields JSON", key="tpl_fields")
         if st.button("Save"):
             try:
                 tm.save_template(name, json.loads(fields))
-                st.success("Saved!")
+                st.success("Saved")
                 st.rerun()
             except:
                 st.error("Invalid JSON")
-    
-    st.divider()
-    
-    st.subheader("Processed")
-    if st.session_state.extractions:
-        for doc in st.session_state.extractions.keys():
-            st.caption(f"Done: {doc}")
-        
-        if st.button("Export All (Excel)"):
-            excel = Exporter.batch_to_excel(st.session_state.extractions)
-            st.download_button("Download", excel, "batch_export.xlsx")
-        
-        if st.button("Clear History"):
-            st.session_state.extractions = {}
-            st.rerun()
 
 tab1, tab2 = st.tabs(["Extract", "Verify"])
 
 with tab1:
     st.header("Extract Documents")
-    
     uploaded = st.file_uploader("Upload", type=["pdf", "png", "jpg", "jpeg"], accept_multiple_files=True)
     
     if uploaded:
-        c1, c2, c3 = st.columns(3)
+        c1, c2 = st.columns(2)
         template_choice = c1.selectbox("Template", ["Auto"] + tm.list_templates())
         confidence = c2.slider("Confidence", 0.0, 1.0, 0.25)
-        all_pages = c3.checkbox("All pages", value=True)
         
-        if st.button("Process All", type="primary"):
+        if st.button("Process", type="primary"):
             reader = load_ocr()
             
-            progress = st.progress(0)
-            
-            for idx, file in enumerate(uploaded):
-                progress.progress((idx + 1) / len(uploaded))
+            for file in uploaded:
                 st.write(f"Processing: {file.name}")
                 
                 if file.type == "application/pdf":
@@ -122,52 +95,29 @@ with tab1:
                     st.session_state.extractions[file.name] = extracted
                     st.success(f"{file.name}: {len(extracted)} fields")
                 else:
-                    st.warning(f"{file.name}: No template matched")
+                    st.warning(f"{file.name}: No template")
             
-            st.success("Done!")
+            st.success("Done")
         
         if st.session_state.extractions:
-            st.divider()
-            
             for doc_name, extracted in st.session_state.extractions.items():
-                with st.expander(f"Doc: {doc_name}"):
-                    cols = st.columns(2)
+                with st.expander(doc_name):
+                    for field, data in extracted.items():
+                        st.text_input(field, data.get("value", ""), key=f"{doc_name}_{field}")
                     
-                    for i, (field, data) in enumerate(extracted.items()):
-                        cols[i % 2].text_input(field, data.get("value", ""), key=f"{doc_name}_{field}")
-                    
-                    bc1, bc2, bc3 = st.columns(3)
-                    bc1.download_button("JSON", Exporter.to_json(extracted), f"{doc_name}.json")
-                    bc2.download_button("CSV", Exporter.to_csv(extracted), f"{doc_name}.csv")
-                    bc3.download_button("Excel", Exporter.to_excel(extracted), f"{doc_name}.xlsx")
+                    st.download_button("JSON", Exporter.to_json(extracted), f"{doc_name}.json")
 
 with tab2:
-    st.header("Verify Extractions")
-    
+    st.header("Verify")
     if not st.session_state.extractions:
         st.info("Process documents first")
     else:
-        doc_choice = st.selectbox("Select Document", list(st.session_state.extractions.keys()))
-        
-        if doc_choice:
-            extracted = st.session_state.extractions[doc_choice]
-            
-            if st.button("Run Verification", type="primary"):
-                results = Verifier.run_all_checks(extracted)
-                
-                col1, col2, col3 = st.columns(3)
-                col1.metric("Passed", results["passed"])
-                col2.metric("Failed", results["failed"])
-                col3.metric("Score", results["score"])
-                
-                st.divider()
-                
-                for check in results["checks"]:
-                    field = check.get("field", "Unknown")
-                    valid = check.get("valid", False)
-                    
-                    if valid:
-                        st.success(f"Pass: {field}")
-                    else:
-                        error = check.get("error", "Failed")
-                        st.error(f"Fail: {field} - {error}")
+        doc_choice = st.selectbox("Document", list(st.session_state.extractions.keys()))
+        if doc_choice and st.button("Verify", type="primary"):
+            results = Verifier.run_all_checks(st.session_state.extractions[doc_choice])
+            st.metric("Score", results["score"])
+            for check in results["checks"]:
+                if check.get("valid"):
+                    st.success(f"Pass: {check['field']}")
+                else:
+                    st.error(f"Fail: {check['field']}")
